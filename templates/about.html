@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}About - Flask App{% endblock %}
+
+{% block content %}
+<h1>About This App</h1>
+
+<p>This is a simple Flask web application that demonstrates basic web development concepts including:</p>
+
+<ul>
+    <li><strong>Routing:</strong> Different URLs that serve different pages</li>
+    <li><strong>Templates:</strong> HTML templates with Jinja2 templating</li>
+    <li><strong>Forms:</strong> Handling user input through web forms</li>
+    <li><strong>Flash Messages:</strong> Displaying feedback to users</li>
+    <li><strong>Basic CRUD:</strong> Create, Read, Update, Delete operations</li>
+    <li><strong>API Endpoint:</strong> JSON API for accessing data</li>
+</ul>
+
+<h2>Features</h2>
+<p>This task manager app includes:</p>
+<ul>
+    <li>Add new tasks</li>
+    <li>Mark tasks as completed</li>
+    <li>Delete tasks</li>
+    <li>View task statistics</li>
+    <li>Responsive design</li>
+</ul>
+
+<h2>Technical Details</h2>
+<ul>
+    <li><strong>Framework:</strong> Flask (Python)</li>
+    <li><strong>Templating:</strong> Jinja2</li>
+    <li><strong>Styling:</strong> Custom CSS</li>
+    <li><strong>Data Storage:</strong> In-memory (list)</li>
+</ul>
+
+<p><em>Note: This is a demonstration app. In production, you would use a proper database and implement additional security measures.</em></p>
+
+<div style="margin-top: 30px; padding: 20px; background-color: #e9ecef; border-radius: 5px;">
+    <h3>API Access</h3>
+    <p>You can also access the tasks data via JSON API:</p>
+    <code style="background: white; padding: 5px; border-radius: 3px;">GET /api/tasks</code>
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Task Manager - Flask App{% endblock %}
+
+{% block content %}
+<h1>Task Manager</h1>
+
+<form action="/add_task" method="POST">
+    <input type="text" name="task" placeholder="Enter a new task..." required>
+    <button type="submit" class="btn btn-primary">Add Task</button>
+</form>
+
+<h2>Your Tasks</h2>
+
+{% if tasks %}
+    <div class="task-list">
+        {% for task in tasks %}
+            <div class="task-item" style="
+                display: flex; 
+                align-items: center; 
+                padding: 10px; 
+                margin: 10px 0; 
+                background: {% if task.completed %}#f0f8f0{% else %}#fff8f0{% endif %}; 
+                border-left: 4px solid {% if task.completed %}#28a745{% else %}#ffc107{% endif %};
+                border-radius: 4px;
+            ">
+                <span style="
+                    flex-grow: 1; 
+                    {% if task.completed %}text-decoration: line-through; color: #6c757d;{% endif %}
+                ">
+                    {{ task.text }}
+                </span>
+                
+                <div class="task-actions">
+                    {% if not task.completed %}
+                        <a href="/complete_task/{{ task.id }}" class="btn btn-success">Complete</a>
+                    {% endif %}
+                    <a href="/delete_task/{{ task.id }}" class="btn btn-danger" 
+                       onclick="return confirm('Are you sure you want to delete this task?')">Delete</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p style="color: #6c757d; font-style: italic;">No tasks yet. Add one above!</p>
+{% endif %}
+
+<div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+    <h3>Quick Stats</h3>
+    <p>Total tasks: {{ tasks|length }}</p>
+    <p>Completed: {{ tasks|selectattr('completed')|list|length }}</p>
+    <p>Remaining: {{ tasks|rejectattr('completed')|list|length }}</p>
+</div>
+{% endblock %}
