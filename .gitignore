@@ -64,6 +64,7 @@ coverage.xml
 
 # Pytest
 .pytest_cache/
+test.py
 
 # mypy
 .mypy_cache/
