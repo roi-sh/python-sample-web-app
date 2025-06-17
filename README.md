@@ -1,4 +1,4 @@
-# Flask Task Manager
+# Python Web Application
 
 A simple, containerized task management web application built with Flask. This application allows users to add, complete, and delete tasks with a clean, responsive interface.
 
