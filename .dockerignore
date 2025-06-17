@@ -44,7 +44,6 @@ docker-compose*
 .dockerignore
 
 # Documentation
-README.md
 *.md
 
 # Logs
