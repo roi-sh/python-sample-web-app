@@ -28,20 +28,14 @@ phases:
   build:
     commands:
       - echo Build phase started on `date`
-      
-      # Run Pylint test
       - echo "Running Pylint test..."
       - SCORE=$(pylint app.py | awk '{a[NR]=$7} END{gsub("/10","",a[NR-1]); print a[NR-1]}')
       - echo "Pylint score: $SCORE"
       - 'if [ "$(echo "$SCORE > 5" | bc -l)" -eq 1 ]; then echo "Pylint test passed with score $SCORE"; else echo "Pylint test failed with score $SCORE"; exit 1; fi'
-      
-      # If pylint passes, proceed with Docker build
       - echo "Pylint test passed, proceeding with Docker build..."
       - echo Logging in to Amazon ECR...
       - AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
-      
-      # Build Docker image
       - echo Building the Docker image...
       - docker build -t $IMAGE_REPO_NAME .
       - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
