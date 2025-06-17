@@ -1,0 +1,66 @@
+version: 0.2
+
+env:
+  variables:
+    AWS_DEFAULT_REGION: eu-north-1
+    IMAGE_REPO_NAME: projects/python-sample-web-app
+    IMAGE_TAG: latest
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.11
+    commands:
+      - echo Install phase started on `date`
+      - apt-get update -y
+      - apt-get install -y bc
+      - pip install --upgrade pip
+      - pip install pylint
+      - echo Install phase completed on `date`
+
+  pre_build:
+    commands:
+      - echo Pre-build phase started on `date`
+      - echo Installing dependencies...
+      - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - echo Pre-build phase completed on `date`
+
+  build:
+    commands:
+      - echo Build phase started on `date`
+      
+      # Run Pylint test
+      - echo "Running Pylint test..."
+      - SCORE=$(pylint app.py | awk '{a[NR]=$7} END{gsub("/10","",a[NR-1]); print a[NR-1]}')
+      - echo "Pylint score: $SCORE"
+      - |
+        if [ "$(echo "$SCORE > 5" | bc -l)" -eq 1 ]; then
+          echo "Pylint test passed with score $SCORE"
+        else
+          echo "Pylint test failed with score $SCORE"
+          exit 1
+        fi
+      
+      # If pylint passes, proceed with Docker build
+      - echo "Pylint test passed, proceeding with Docker build..."
+      - echo Logging in to Amazon ECR...
+      - AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      
+      # Build Docker image
+      - echo Building the Docker image...
+      - docker build -t $IMAGE_REPO_NAME .
+      - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+      - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:test
+
+  post_build:
+    commands:
+      - echo Post-build phase started on `date`
+      - echo Pushing the Docker images...
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:test
+      - echo Post-build phase completed on `date`
+
+artifacts:
+  files:
+    - '**/*'
