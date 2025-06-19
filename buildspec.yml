@@ -49,7 +49,6 @@ phases:
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - echo "Creating image definitions for CodeDeploy"
       - printf '[{"name":"python-app-container","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
-      - echo "Image URI: $REPOSITORY_URI:$IMAGE_TAG"
       - cat imagedefinitions.json
       - echo "Build completed successfully"
 
