@@ -5,6 +5,6 @@ Resources:
       Properties:
         TaskDefinition: roi
         LoadBalancerInfo:
-          ContainerName: "python-app-container"
+          ContainerName: "python-sample-web-app"
           ContainerPort: 5000
         PlatformVersion: "LATEST"
