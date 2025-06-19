@@ -37,11 +37,16 @@ phases:
     commands:
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - docker push $REPOSITORY_URI:latest
-      - printf '[{"name":"python-app-container","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+      - printf '[{"name":"python-sample-web-app","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
       - cat imagedefinitions.json
+      - aws ecs describe-task-definition --task-definition roi --region $AWS_DEFAULT_REGION --query taskDefinition > taskdef.json
+      - sed -i "s|CONTAINER_IMAGE|$REPOSITORY_URI:$IMAGE_TAG|g" taskdef.json
+      - sed -i "s|<TASK_DEFINITION>|roi:$CODEBUILD_BUILD_NUMBER|g" appspec.yml
+      - cat appspec.yml
 
 artifacts:
   files:
     - imagedefinitions.json
     - appspec.yml
+    - taskdef.json
   name: BuildArtifacts
