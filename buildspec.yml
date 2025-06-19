@@ -13,7 +13,7 @@ phases:
       python: 3.11
     commands:
       - apt-get update -y
-      - apt-get install -y jq
+      - apt-get install -y bc
       - pip install --upgrade pip
       - pip install pylint
 
@@ -37,21 +37,16 @@ phases:
     commands:
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - docker push $REPOSITORY_URI:latest
-      - echo "Creating task definition JSON for Blue/Green deployment"
-      - aws ecs describe-task-definition --task-definition roi --region $AWS_DEFAULT_REGION > taskdef-full.json
-      - cat taskdef-full.json | jq '.taskDefinition | del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .placementConstraints, .compatibilities, .registeredAt, .registeredBy)' > taskdef.json
-      - sed -i "s|977099005866.dkr.ecr.eu-north-1.amazonaws.com/projects/python-sample-web-app:[^\"]*|$REPOSITORY_URI:$IMAGE_TAG|g" taskdef.json
-      - echo "Getting target group ARN from ECS service"
-      - TARGET_GROUP_ARN=$(aws ecs describe-services --cluster $ECS_CLUSTER_NAME --services roi-service-gzfn9ez7 --region $AWS_DEFAULT_REGION --query 'services[0].loadBalancers[0].targetGroupArn' --output text)
-      - echo "Target Group ARN is $TARGET_GROUP_ARN"
-      - sed -i "s|<TARGET_GROUP_ARN>|$TARGET_GROUP_ARN|g" appspec.yml
-      - echo "Final taskdef.json contents:"
-      - cat taskdef.json
-      - echo "Final appspec.yml contents:"
+      - printf '[{"name":"python-sample-web-app","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+      - cat imagedefinitions.json
+      - aws ecs describe-task-definition --task-definition roi --region $AWS_DEFAULT_REGION --query taskDefinition > taskdef.json
+      - sed -i "s|CONTAINER_IMAGE|$REPOSITORY_URI:$IMAGE_TAG|g" taskdef.json
+      - sed -i "s|<TASK_DEFINITION>|roi:$CODEBUILD_BUILD_NUMBER|g" appspec.yml
       - cat appspec.yml
 
 artifacts:
   files:
-    - taskdef.json
+    - imagedefinitions.json
     - appspec.yml
+    - taskdef.json
   name: BuildArtifacts
