@@ -12,7 +12,6 @@ phases:
     runtime-versions:
       python: 3.11
     commands:
-      - echo "Install phase started"
       - apt-get update -y
       - apt-get install -y bc
       - pip install --upgrade pip
@@ -20,37 +19,26 @@ phases:
 
   pre_build:
     commands:
-      - echo "Pre-build phase started"
-      - echo "Installing dependencies"
       - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-      - echo "Getting AWS Account ID and commit hash"
       - AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
       - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
-      - echo "Image will be tagged as $IMAGE_TAG"
 
   build:
     commands:
-      - echo "Build phase started"
-      - echo "Running Pylint test"
       - pylint app.py --exit-zero --score=yes
-      - echo "Logging in to Amazon ECR"
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
-      - echo "Building Docker image"
       - docker build -t $IMAGE_REPO_NAME .
-      - echo "Tagging images"
       - docker tag $IMAGE_REPO_NAME:latest $REPOSITORY_URI:$IMAGE_TAG
-      - echo "Tagged image as $REPOSITORY_URI:$IMAGE_TAG"
+      - docker tag $IMAGE_REPO_NAME:latest $REPOSITORY_URI:latest
 
   post_build:
     commands:
-      - echo "Pushing Docker image"
       - docker push $REPOSITORY_URI:$IMAGE_TAG
-      - echo "Creating image definitions for CodeDeploy"
+      - docker push $REPOSITORY_URI:latest
       - printf '[{"name":"python-app-container","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
       - cat imagedefinitions.json
-      - echo "Build completed successfully"
 
 artifacts:
   files:
